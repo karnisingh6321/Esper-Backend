@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Service
@@ -55,7 +56,51 @@ public class FollowService {
         followRepository.deleteByFollowerAndFollowing(follower, following);
     }
 
+    public List<User> getFollowers(Long userId) {
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("user not found"));
+
+        return followRepository.findByFollowing(user)
+                .stream()
+                .map(Follow::getFollower)
+                .toList();
+    }
+
+    public List<User> getFollowing(Long userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("user not found"));
+
+        return followRepository.findByFollower(user)
+                .stream()
+                .map(Follow::getFollowing)
+                .toList();
+    }
+
+    public long getFollowersCount(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("user not found"));
+
+        return followRepository.countByFollowing(user);
+    }
+
+    public long getFollowingCount(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("user not found"));
+        return followRepository.countByFollower(user);
+    }
+
+    public boolean isFollowing(Long followerId, Long followingId) {
+
+        User follower = userRepository.findById(followerId)
+                .orElseThrow(() -> new RuntimeException("follower not found"));
+
+        User following = userRepository.findById(followingId)
+                .orElseThrow(() -> new RuntimeException("following not found"));
+
+        return followRepository.existsByFollowerAndFollowing(follower, following);
+    }
 
 
 
