@@ -8,10 +8,16 @@ import com.project.esperApp.repository.PostRepository;
 import com.project.esperApp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,7 +35,7 @@ public class PostService {
 
 
 
-    public Post createPost(Long userId, String title, String content, String image, Set<String> tags) {
+    public Post createPost(Long userId, String title, String content, MultipartFile image, Set<String> tags) {
 
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -39,10 +45,19 @@ public class PostService {
         post.setContent(content);
         post.setAuthor(author);
 
-        if (image != null && !image.trim().isEmpty()) {
-            post.setImage(image);
-        } else {
-            post.setImage(null);
+        if (image != null && !image.isEmpty()) {
+
+            String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
+            Path filePath = Paths.get("uploads/" + fileName);
+
+            try {
+                Files.createDirectories(filePath.getParent());
+                Files.write(filePath, image.getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException("Image upload failed");
+            }
+
+            post.setImage(fileName);
         }
 
         if (tags != null && !tags.isEmpty()) {
@@ -80,13 +95,24 @@ public class PostService {
         postRepository.delete(post);
     }
 
-    public Post updatePost(Long postId, String title, String content,String image, Set<String> tags) {
+    public Post updatePost(Long postId, String title, String content,MultipartFile image, Set<String> tags) {
         Post post = getPostById(postId);
         post.setTitle(title);
         post.setContent(content);
 
-        if (image != null && !image.trim().isEmpty()) {
-            post.setImage(image);
+        if (image != null && !image.isEmpty()) {
+
+            String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
+            Path filePath = Paths.get("uploads/" + fileName);
+
+            try {
+                Files.createDirectories(filePath.getParent());
+                Files.write(filePath, image.getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException("Image upload failed");
+            }
+
+            post.setImage(fileName);
         }
 
         Set<Hashtag> hashtagEntities = tags.stream().map(tag -> {
