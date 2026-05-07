@@ -15,7 +15,7 @@ import java.util.Set;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = "posts")
+@ToString(exclude = {"posts","following", "followers", "comments", "followedHashtags"})
 public class User {
 
     @Id
